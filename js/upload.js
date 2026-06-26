@@ -1,61 +1,77 @@
 import { supabase } from "./supabase.js";
-
 import {
-    MAX_FILE_SIZE,
-    ALLOWED_TYPES,
     STORAGE_BUCKET,
-    SITE_URL
+    MAX_FILE_SIZE,
+    ALLOWED_TYPES
 } from "./config.js";
+
+/* ==========================================
+   DOM
+========================================== */
 
 const dropArea = document.getElementById("dropArea");
 const fileInput = document.getElementById("fileInput");
 const browseBtn = document.getElementById("browseBtn");
 
-const fileInfo = document.getElementById("fileInfo");
+const selectedBox = document.getElementById("selectedBox");
+const progressBox = document.getElementById("progressBox");
+const successBox = document.getElementById("successBox");
+
 const fileName = document.getElementById("fileName");
 const fileSize = document.getElementById("fileSize");
+const fileIcon = document.getElementById("fileIcon");
 
 const uploadBtn = document.getElementById("uploadBtn");
 
-const progressCard = document.getElementById("progressCard");
 const progressBar = document.getElementById("progressBar");
 const progressText = document.getElementById("progressText");
 
-const resultCard = document.getElementById("resultCard");
 const publicLink = document.getElementById("publicLink");
-
 const copyBtn = document.getElementById("copyBtn");
 const openBtn = document.getElementById("openBtn");
+const newUploadBtn = document.getElementById("newUploadBtn");
 
 const toast = document.getElementById("toast");
 
+/* ==========================================
+   VARIABLES
+========================================== */
+
 let selectedFile = null;
 
-/* ===========================
-   Browse
-=========================== */
+/* ==========================================
+   EVENTS
+========================================== */
 
-browseBtn.onclick = () => fileInput.click();
+browseBtn.addEventListener("click", () => {
 
-dropArea.onclick = () => fileInput.click();
+    fileInput.click();
 
-fileInput.onchange = () => {
+});
 
-    if(fileInput.files.length){
+dropArea.addEventListener("click", () => {
+
+    fileInput.click();
+
+});
+
+fileInput.addEventListener("change", () => {
+
+    if (fileInput.files.length) {
 
         handleFile(fileInput.files[0]);
 
     }
 
-};
+});
 
-/* ===========================
-   Drag & Drop
-=========================== */
+/* ==========================================
+   DRAG & DROP
+========================================== */
 
-["dragenter","dragover"].forEach(event => {
+["dragenter", "dragover"].forEach(event => {
 
-    dropArea.addEventListener(event,e=>{
+    dropArea.addEventListener(event, e => {
 
         e.preventDefault();
 
@@ -65,9 +81,9 @@ fileInput.onchange = () => {
 
 });
 
-["dragleave","drop"].forEach(event=>{
+["dragleave", "drop"].forEach(event => {
 
-    dropArea.addEventListener(event,e=>{
+    dropArea.addEventListener(event, e => {
 
         e.preventDefault();
 
@@ -77,9 +93,9 @@ fileInput.onchange = () => {
 
 });
 
-dropArea.addEventListener("drop",e=>{
+dropArea.addEventListener("drop", e => {
 
-    if(e.dataTransfer.files.length){
+    if (e.dataTransfer.files.length) {
 
         handleFile(e.dataTransfer.files[0]);
 
@@ -87,13 +103,13 @@ dropArea.addEventListener("drop",e=>{
 
 });
 
-/* ===========================
-   Handle File
-=========================== */
+/* ==========================================
+   HANDLE FILE
+========================================== */
 
-function handleFile(file){
+function handleFile(file) {
 
-    if(!ALLOWED_TYPES.includes(file.type)){
+    if (!ALLOWED_TYPES.includes(file.type)) {
 
         alert("Unsupported file type.");
 
@@ -101,7 +117,7 @@ function handleFile(file){
 
     }
 
-    if(file.size > MAX_FILE_SIZE){
+    if (file.size > MAX_FILE_SIZE) {
 
         alert("Maximum file size is 10 MB.");
 
@@ -114,160 +130,367 @@ function handleFile(file){
     fileName.textContent = file.name;
 
     fileSize.textContent =
-        (file.size / 1024 / 1024).toFixed(2) + " MB";
+        formatFileSize(file.size);
 
-    fileInfo.classList.remove("hidden");
+    fileIcon.textContent =
+        getFileIcon(file.type);
 
-fileInfo.scrollIntoView({
-    behavior: "smooth",
-    block: "center"
-});
-    
+    selectedBox.classList.remove("hidden");
+
+    progressBox.classList.add("hidden");
+
+    successBox.classList.add("hidden");
+
 }
 
-/* ===========================
-   Upload
-=========================== */
+/* ==========================================
+   FILE ICON
+========================================== */
 
-uploadBtn.onclick = async ()=>{
+function getFileIcon(type) {
 
-    if(!selectedFile) return;
+    if (type.startsWith("image/")) {
 
-    progressCard.classList.remove("hidden");
+        return "🖼️";
+
+    }
+
+    if (type === "application/pdf") {
+
+        return "📕";
+
+    }
+
+    if (type.includes("word")) {
+
+        return "📄";
+
+    }
+
+    if (type.includes("spreadsheet")) {
+
+        return "📊";
+
+    }
+
+    return "📁";
+
+}
+
+/* ==========================================
+   FORMAT SIZE
+========================================== */
+
+function formatFileSize(bytes) {
+
+    if (bytes < 1024) {
+
+        return bytes + " B";
+
+    }
+
+    if (bytes < 1024 * 1024) {
+
+        return (bytes / 1024).toFixed(1) + " KB";
+
+    }
+
+    return (bytes / 1024 / 1024).toFixed(2) + " MB";
+
+}
+
+/* ==========================================
+   PART 2 STARTS BELOW
+========================================== */
+
+/* ==========================================
+   UPLOAD
+========================================== */
+
+uploadBtn.addEventListener("click", uploadFile);
+
+async function uploadFile() {
+
+    if (!selectedFile) {
+
+        alert("Please select a file.");
+
+        return;
+
+    }
 
     uploadBtn.disabled = true;
 
-    simulateProgress();
+    uploadBtn.textContent = "Uploading...";
 
-    const extension =
-        selectedFile.name.split(".").pop();
+    selectedBox.classList.add("hidden");
 
-    const storageName =
-        crypto.randomUUID()+"."+extension;
+    progressBox.classList.remove("hidden");
 
-    const publicId =
-        generatePublicId();
+    progressBar.style.width = "10%";
 
-    /* Upload */
+    progressText.textContent = "Preparing...";
 
-    const { error:uploadError } =
-    await supabase.storage
-        .from(STORAGE_BUCKET)
-        .upload(storageName,selectedFile,{
+    try {
 
-            cacheControl:"3600",
+        const extension =
+            selectedFile.name.split(".").pop().toLowerCase();
 
-            upsert:false
+        const storageName =
+            crypto.randomUUID() + "." + extension;
 
-        });
+        const publicId =
+            generatePublicId();
 
-    if(uploadError){
+        progressBar.style.width = "25%";
+        progressText.textContent = "Uploading to Storage...";
 
-        alert(uploadError.message);
+        const { error: uploadError } =
+            await supabase.storage
+                .from(STORAGE_BUCKET)
+                .upload(storageName, selectedFile, {
+                    cacheControl: "3600",
+                    upsert: false
+                });
 
-        uploadBtn.disabled=false;
+        if (uploadError) {
 
-        return;
+            throw uploadError;
+
+        }
+
+        progressBar.style.width = "70%";
+        progressText.textContent = "Saving information...";
+
+        const { error: dbError } =
+            await supabase
+                .from("files")
+                .insert({
+
+                    public_id: publicId,
+
+                    file_name: selectedFile.name,
+
+                    file_type: selectedFile.type,
+
+                    file_size: selectedFile.size,
+
+                    storage_path: storageName
+
+                });
+
+        if (dbError) {
+
+            throw dbError;
+
+        }
+
+        progressBar.style.width = "100%";
+        progressText.textContent = "Completed";
+
+        showSuccess(publicId);
 
     }
 
-    /* Save Metadata */
+    catch (error) {
 
-    const { error:dbError } =
-    await supabase
-        .from("files")
-        .insert({
-    public_id: publicId,
-    file_name: selectedFile.name,
-    file_type: selectedFile.type,
-    file_size: selectedFile.size,
-    storage_path: storageName
-});
+        console.error(error);
 
-    if(dbError){
+        alert(error.message);
 
-        alert(dbError.message);
+        progressBox.classList.add("hidden");
 
-        uploadBtn.disabled=false;
-
-        return;
+        selectedBox.classList.remove("hidden");
 
     }
 
-    progressBar.style.width="100%";
+    finally {
 
-    progressText.textContent="100%";
+        uploadBtn.disabled = false;
 
-    resultCard.classList.remove("hidden");
+        uploadBtn.textContent = "Upload File";
 
-resultCard.scrollIntoView({
-    behavior: "smooth",
-    block: "center"
-});
+    }
+
+}
+
+/* ==========================================
+   SUCCESS
+========================================== */
+
+function showSuccess(publicId) {
+
+    progressBox.classList.add("hidden");
+
+    successBox.classList.remove("hidden");
 
     const link =
-        `${SITE_URL}/file.html?id=${publicId}`;
+        `${window.location.origin}/file.html?id=${publicId}`;
 
     publicLink.value = link;
 
     openBtn.href = link;
 
-};
+}
 
-/* ===========================
-   Copy
-=========================== */
+/* ==========================================
+   RANDOM PUBLIC ID
+========================================== */
 
-copyBtn.onclick = async ()=>{
+function generatePublicId() {
 
-    await navigator.clipboard.writeText(publicLink.value);
+    const chars =
+        "abcdefghijklmnopqrstuvwxyz0123456789";
+
+    let id = "";
+
+    for (let i = 0; i < 6; i++) {
+
+        id += chars.charAt(
+            Math.floor(Math.random() * chars.length)
+        );
+
+    }
+
+    return id;
+
+}
+
+/* ==========================================
+   PART 3 STARTS BELOW
+========================================== */
+
+/* ==========================================
+   COPY LINK
+========================================== */
+
+copyBtn.addEventListener("click", async () => {
+
+    try {
+
+        await navigator.clipboard.writeText(publicLink.value);
+
+        showToast("Link Copied!");
+
+    }
+
+    catch {
+
+        publicLink.select();
+
+        document.execCommand("copy");
+
+        showToast("Link Copied!");
+
+    }
+
+});
+
+/* ==========================================
+   OPEN FILE
+========================================== */
+
+openBtn.addEventListener("click", () => {
+
+    // href is already assigned in showSuccess()
+
+});
+
+/* ==========================================
+   UPLOAD ANOTHER FILE
+========================================== */
+
+newUploadBtn.addEventListener("click", resetUploader);
+
+/* ==========================================
+   RESET
+========================================== */
+
+function resetUploader() {
+
+    selectedFile = null;
+
+    fileInput.value = "";
+
+    selectedBox.classList.add("hidden");
+
+    progressBox.classList.add("hidden");
+
+    successBox.classList.add("hidden");
+
+    progressBar.style.width = "0%";
+
+    progressText.textContent = "0%";
+
+    publicLink.value = "";
+
+    uploadBtn.disabled = false;
+
+    uploadBtn.textContent = "Upload File";
+
+}
+
+/* ==========================================
+   TOAST
+========================================== */
+
+function showToast(message) {
+
+    toast.textContent = message;
 
     toast.classList.add("show");
 
-    setTimeout(()=>{
+    clearTimeout(toast.timer);
+
+    toast.timer = setTimeout(() => {
 
         toast.classList.remove("show");
 
-    },2500);
-
-};
-
-/* ===========================
-   Progress Animation
-=========================== */
-
-function simulateProgress(){
-
-    let value=0;
-
-    const timer=setInterval(()=>{
-
-        value+=5;
-
-        if(value>=95){
-
-            clearInterval(timer);
-
-            return;
-
-        }
-
-        progressBar.style.width=value+"%";
-
-        progressText.textContent=value+"%";
-
-    },120);
+    }, 2500);
 
 }
 
-/* ===========================
-   Random Public ID
-=========================== */
+/* ==========================================
+   KEYBOARD SHORTCUT
+========================================== */
 
-function generatePublicId(){
+document.addEventListener("keydown", e => {
 
-    return Math.random()
-        .toString(36)
-        .substring(2,8);
+    if (
+        (e.ctrlKey || e.metaKey) &&
+        e.key.toLowerCase() === "v"
+    ) {
 
-}
+        fileInput.focus();
+
+    }
+
+});
+
+/* ==========================================
+   PREVENT DEFAULT BROWSER DROP
+========================================== */
+
+["dragenter","dragover","drop"].forEach(event => {
+
+    document.addEventListener(event, e => {
+
+        e.preventDefault();
+
+    });
+
+});
+
+document.addEventListener("drop", e => {
+
+    e.preventDefault();
+
+});
+
+/* ==========================================
+   INITIAL STATE
+========================================== */
+
+resetUploader();
+
+console.log("✅ DropLink Ready");
