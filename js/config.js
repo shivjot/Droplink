@@ -37,4 +37,4 @@ export const STORAGE_BUCKET = "files";
 // Base URL after deployment
 // Change this after deploying to Vercel.
 
-export const SITE_URL = "http://127.0.0.1:5500";
+export const SITE_URL = "https://droplink-gpt.vercel.app";
