@@ -118,6 +118,11 @@ function handleFile(file){
 
     fileInfo.classList.remove("hidden");
 
+fileInfo.scrollIntoView({
+    behavior: "smooth",
+    block: "center"
+});
+    
 }
 
 /* ===========================
@@ -194,6 +199,11 @@ uploadBtn.onclick = async ()=>{
     progressText.textContent="100%";
 
     resultCard.classList.remove("hidden");
+
+resultCard.scrollIntoView({
+    behavior: "smooth",
+    block: "center"
+});
 
     const link =
         `${SITE_URL}/file.html?id=${publicId}`;
