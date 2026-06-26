@@ -1,44 +1,64 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
 
     <meta charset="UTF-8">
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>DropLink | Drag. Drop. Share.</title>
+    <title>DropLink</title>
+
+    <meta name="description" content="Upload images and documents. Get a public link instantly.">
 
     <link rel="stylesheet" href="css/style.css">
 
 </head>
+
 <body>
 
-<div class="background"></div>
+<div class="bg"></div>
 
 <div class="container">
+
+    <!-- ===========================
+         HEADER
+    ============================ -->
 
     <header>
 
         <div class="logo">
+
             📁
+
         </div>
 
         <h1>DropLink</h1>
 
         <p>
-            Drag. Drop. Share.
+
+            Drag. Drop. Share Instantly.
+
         </p>
 
     </header>
 
-    <!-- Upload Card -->
+    <!-- ===========================
+         MAIN CARD
+    ============================ -->
 
-    <div class="card">
+    <section class="card">
 
-        <div id="dropArea" class="drop-area">
+        <!-- Upload Area -->
+
+        <div
+            id="dropArea"
+            class="drop-area"
+        >
 
             <input
-                type="file"
                 id="fileInput"
+                type="file"
                 hidden
                 accept="
                 image/png,
@@ -50,127 +70,181 @@
                 "
             >
 
-            <div class="upload-icon">
+            <div class="icon">
 
                 ☁️
 
             </div>
 
             <h2>
-                Drag & Drop File
+
+                Drag & Drop
+
             </h2>
 
             <p>
-                or click to browse
+
+                or click below
+
             </p>
 
-            <button id="browseBtn">
-                Browse Files
-            </button>
-
-            <small>
-
-                Supported:
-                PNG • JPG • WEBP • PDF • DOCX • XLSX
-
-            </small>
-
-            <small>
-
-                Maximum File Size: 10 MB
-
-            </small>
-
-        </div>
-
-    </div>
-
-    <!-- File Info -->
-
-    <div id="fileInfo" class="card hidden">
-
-        <h3>Selected File</h3>
-
-        <div class="file-row">
-
-            <span>Name</span>
-            <span id="fileName"></span>
-
-        </div>
-
-        <div class="file-row">
-
-            <span>Size</span>
-            <span id="fileSize"></span>
-
-        </div>
-
-        <button id="uploadBtn">
-
-            Upload
-
-        </button>
-
-    </div>
-
-    <!-- Progress -->
-
-    <div id="progressCard" class="card hidden">
-
-        <h3>Uploading...</h3>
-
-        <div class="progress">
-
-            <div
-                id="progressBar"
-                class="progress-bar"
-            ></div>
-
-        </div>
-
-        <p id="progressText">
-
-            0%
-
-        </p>
-
-    </div>
-
-    <!-- Success -->
-
-    <div id="resultCard" class="card hidden">
-
-        <h2>
-
-            ✅ Upload Successful
-
-        </h2>
-
-        <input
-            id="publicLink"
-            readonly
-        >
-
-        <div class="buttons">
-
-            <button id="copyBtn">
-
-                Copy Link
-
-            </button>
-
-            <a
-                id="openBtn"
-                target="_blank"
+            <button
+                id="browseBtn"
+                type="button"
             >
 
-                Open
+                Browse Files
 
-            </a>
+            </button>
+
+            <div class="support">
+
+                PNG • JPG • WEBP • PDF • DOCX • XLSX
+
+            </div>
+
+            <div class="support">
+
+                Maximum size: 10 MB
+
+            </div>
 
         </div>
 
-    </div>
+        <!-- Selected File -->
+
+        <div
+            id="selectedBox"
+            class="hidden"
+        >
+
+            <div class="file-preview">
+
+                <div id="fileIcon">
+
+                    📄
+
+                </div>
+
+                <div>
+
+                    <h3 id="fileName">
+
+                        File
+
+                    </h3>
+
+                    <small id="fileSize">
+
+                        0 MB
+
+                    </small>
+
+                </div>
+
+            </div>
+
+            <button
+                id="uploadBtn"
+                class="full-btn"
+                type="button"
+            >
+
+                Upload File
+
+            </button>
+
+        </div>
+
+        <!-- Upload Progress -->
+
+        <div
+            id="progressBox"
+            class="hidden"
+        >
+
+            <h3>
+
+                Uploading...
+
+            </h3>
+
+            <div class="progress">
+
+                <div
+                    id="progressBar"
+                    class="progress-bar"
+                ></div>
+
+            </div>
+
+            <p id="progressText">
+
+                0%
+
+            </p>
+
+        </div>
+
+        <!-- Success -->
+
+        <div
+            id="successBox"
+            class="hidden"
+        >
+
+            <div class="success">
+
+                ✅ Upload Successful
+
+            </div>
+
+            <input
+                id="publicLink"
+                readonly
+            >
+
+            <div class="btn-group">
+
+                <button
+                    id="copyBtn"
+                    type="button"
+                >
+
+                    Copy Link
+
+                </button>
+
+                <a
+                    id="openBtn"
+                    target="_blank"
+                >
+
+                    Open File
+
+                </a>
+
+            </div>
+
+            <button
+                id="newUploadBtn"
+                class="secondary"
+                type="button"
+            >
+
+                Upload Another File
+
+            </button>
+
+        </div>
+
+    </section>
+
+    <footer>
+
+        Made with ❤️ using Supabase
+
+    </footer>
 
 </div>
 
@@ -185,15 +259,10 @@
 
 </div>
 
-<!-- Scripts -->
-
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-
-<script type="module" src="js/config.js"></script>
-
-<script type="module" src="js/supabase.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script type="module" src="js/upload.js"></script>
 
 </body>
+
 </html>
