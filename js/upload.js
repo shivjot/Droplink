@@ -172,18 +172,12 @@ uploadBtn.onclick = async ()=>{
     await supabase
         .from("files")
         .insert({
-
-            public_id:publicId,
-
-            file_name:selectedFile.name,
-
-            file_type:selectedFile.type,
-
-            file_size:selectedFile.size,
-
-            storage_path:storageName
-
-        });
+    public_id: publicId,
+    file_name: selectedFile.name,
+    file_type: selectedFile.type,
+    file_size: selectedFile.size,
+    storage_path: storageName
+});
 
     if(dbError){
 
