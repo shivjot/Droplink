@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>DropLink</title>
+
+    <link rel="stylesheet" href="css/style.css">
+
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="card">
+
+        <h2 id="title">
+            Loading...
+        </h2>
+
+        <div id="preview"></div>
+
+        <div class="file-row">
+
+            <span>Name</span>
+
+            <span id="name"></span>
+
+        </div>
+
+        <div class="file-row">
+
+            <span>Size</span>
+
+            <span id="size"></span>
+
+        </div>
+
+        <br>
+
+        <a
+            id="downloadBtn"
+            class="download-btn"
+            target="_blank"
+        >
+
+            Download
+
+        </a>
+
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script type="module" src="js/file.js"></script>
+
+</body>
+
+</html>
