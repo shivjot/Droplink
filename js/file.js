@@ -31,23 +31,20 @@ async function loadFile(){
     }
 
     const { data, error } = await supabase
-        .from("files")
-        .select("*")
-        .eq("public_id", publicId)
-        .single();
+    .from("files")
+    .select("*")
+    .eq("public_id", publicId)
+    .single();
 
-    if(error || !data){
+if (error || !data) {
+    title.textContent = "File Not Found";
+    return;
+}
 
-        title.textContent="File Not Found";
+title.textContent = data.file_name;
 
-        return;
-
-    }
-
-    nameText.textContent = data.file_name;
-
-    sizeText.textContent =
-        (data.file_size / 1024 / 1024).toFixed(2) + " MB";
+nameText.textContent = data.file_name;
+sizeText.textContent = (data.file_size / 1024 / 1024).toFixed(2) + " MB";
 
     const { data:urlData } =
         supabase.storage
