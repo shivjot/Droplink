@@ -1,24 +1,38 @@
 import { supabase } from "./supabase.js";
+import { STORAGE_BUCKET } from "./config.js";
 
-import {
-    STORAGE_BUCKET
-} from "./config.js";
-
-const params = new URLSearchParams(window.location.search);
-
-const publicId = params.get("id");
+/* ==========================================
+   DOM
+========================================== */
 
 const title = document.getElementById("title");
 
 const preview = document.getElementById("preview");
 
-const nameText = document.getElementById("name");
+const name = document.getElementById("name");
 
-const sizeText = document.getElementById("size");
+const size = document.getElementById("size");
 
-const downloadBtn = document.getElementById("downloadBtn");
+const icon = document.getElementById("icon");
+
+const downloadBtn =
+document.getElementById("downloadBtn");
+
+/* ==========================================
+   URL
+========================================== */
+
+const params =
+new URLSearchParams(window.location.search);
+
+const publicId =
+params.get("id");
 
 loadFile();
+
+/* ==========================================
+   LOAD FILE
+========================================== */
 
 async function loadFile(){
 
@@ -30,120 +44,151 @@ async function loadFile(){
 
     }
 
-    const { data, error } = await supabase
+    const {data,error}=await supabase
+
     .from("files")
+
     .select("*")
-    .eq("public_id", publicId)
+
+    .eq("public_id",publicId)
+
     .single();
 
-if (error || !data) {
-    title.textContent = "File Not Found";
-    return;
+    if(error || !data){
+
+        title.textContent="File Not Found";
+
+        return;
+
+    }
+
+    title.textContent=data.file_name;
+
+    name.textContent=data.file_name;
+
+    size.textContent=formatSize(data.file_size);
+
+    icon.textContent=getIcon(data.file_type);
+
+    const {data:urlData}=
+
+    supabase.storage
+
+    .from(STORAGE_BUCKET)
+
+    .getPublicUrl(data.storage_path);
+
+    const url=urlData.publicUrl;
+
+    downloadBtn.href=url;
+
+    showPreview(url,data.file_type);
+
 }
 
-title.textContent = data.file_name;
+/* ==========================================
+   PREVIEW
+========================================== */
 
-nameText.textContent = data.file_name;
-sizeText.textContent = (data.file_size / 1024 / 1024).toFixed(2) + " MB";
+function showPreview(url,type){
 
-    const { data:urlData } =
-        supabase.storage
-            .from(STORAGE_BUCKET)
-            .getPublicUrl(data.storage_path);
-
-    const url = urlData.publicUrl;
-
-    downloadBtn.href = url;
-
-    /* IMAGE */
-
-    if(data.file_type.startsWith("image/")){
-
-        preview.innerHTML = `
-            <img
-                src="${url}"
-                style="
-                width:100%;
-                border-radius:16px;
-                margin:20px 0;
-                ">
-        `;
-
-        return;
-
-    }
-
-    /* PDF */
-
-    if(data.file_type==="application/pdf"){
-
-        preview.innerHTML = `
-            <iframe
-                src="${url}"
-                width="100%"
-                height="700"
-                style="
-                border:none;
-                border-radius:16px;
-                margin:20px 0;
-                ">
-            </iframe>
-        `;
-
-        return;
-
-    }
-
-    /* WORD */
-
-    if(data.file_type.includes("word")){
+    if(type.startsWith("image/")){
 
         preview.innerHTML=`
-            <div
-            style="
-            text-align:center;
-            font-size:70px;
-            margin:30px 0;
-            ">
-            📄
-            </div>
 
-            <p
-            style="
-            text-align:center;
-            color:#999;
-            ">
-            Preview not available.
-            </p>
+        <img
+
+        src="${url}"
+
+        alt="image"
+
+        >
+
         `;
 
         return;
 
     }
 
-    /* EXCEL */
-
-    if(data.file_type.includes("spreadsheet")){
+    if(type==="application/pdf"){
 
         preview.innerHTML=`
-            <div
-            style="
-            text-align:center;
-            font-size:70px;
-            margin:30px 0;
-            ">
-            📊
-            </div>
 
-            <p
-            style="
-            text-align:center;
-            color:#999;
-            ">
-            Preview not available.
-            </p>
+        <iframe
+
+        src="${url}"
+
+        height="700"
+
+        ></iframe>
+
         `;
 
+        return;
+
     }
+
+    preview.innerHTML=`
+
+    <div
+    style="
+
+    text-align:center;
+
+    font-size:90px;
+
+    padding:40px;
+
+    ">
+
+    ${getIcon(type)}
+
+    </div>
+
+    `;
+
+}
+
+/* ==========================================
+   ICONS
+========================================== */
+
+function getIcon(type){
+
+    if(type.startsWith("image/"))
+
+        return "🖼️";
+
+    if(type==="application/pdf")
+
+        return "📕";
+
+    if(type.includes("word"))
+
+        return "📄";
+
+    if(type.includes("spreadsheet"))
+
+        return "📊";
+
+    return "📁";
+
+}
+
+/* ==========================================
+   SIZE
+========================================== */
+
+function formatSize(bytes){
+
+    if(bytes<1024)
+
+        return bytes+" B";
+
+    if(bytes<1024*1024)
+
+        return (bytes/1024).toFixed(1)+" KB";
+
+    return (bytes/1024/1024).toFixed(2)+" MB";
 
 }
